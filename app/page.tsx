@@ -1,16 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import emailjs from "@emailjs/browser";
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [formStatus, setFormStatus] = useState<"idle" | "success" | "error">("idle");
 
   const navItems = [
     { label: "Start", href: "#start" },
     { label: "O mnie", href: "#o-mnie" },
     { label: "Program", href: "#program" },
     { label: "Dla mieszkańców", href: "#mieszkancy" },
-    { label: "Aktualności", href: "#aktualnosci" },
     { label: "Kontakt", href: "#kontakt" },
   ];
 
@@ -71,25 +72,37 @@ export default function Home() {
     "Decyzje oparte na potrzebach mieszkańców, nie na polityce",
   ];
 
-  const updates = [
-    {
-      date: "Maj 2026",
-      title: "Spotkania z mieszkańcami w każdej miejscowości",
-      text: "Rozmowy o najpilniejszych potrzebach i zbieranie konkretnych pomysłów do planu działania.",
-    },
-    {
-      date: "Czerwiec 2026",
-      title: "Prezentacja programu dla rodzin i seniorów",
-      text: "Rozwiązania skupione na jakości życia, codziennym komforcie i większym bezpieczeństwie.",
-    },
-    {
-      date: "Lipiec 2026",
-      title: "Otwarte konsultacje programu inwestycyjnego",
-      text: "Priorytety ustalane wspólnie z mieszkańcami, transparentnie i bez zbędnych obietnic.",
-    },
-  ];
-
   const closeMenu = () => setMenuOpen(false);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const form = event.currentTarget;
+    setFormStatus("idle");
+
+    try {
+      await emailjs.sendForm(
+        "service_45vj2dg",
+        "template_jdyh9li",
+        form,
+        "b3-7UFJsUj7NAFo5r"
+      );
+
+      setFormStatus("success");
+      form.reset();
+
+      setTimeout(() => {
+        setFormStatus("idle");
+      }, 4000);
+    } catch (error) {
+      console.error("EmailJS error:", error);
+      setFormStatus("error");
+
+      setTimeout(() => {
+        setFormStatus("idle");
+      }, 4000);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#f3f4f6] text-slate-900">
@@ -99,22 +112,36 @@ export default function Home() {
         }
       `}</style>
 
+      {formStatus === "success" && (
+        <div className="fixed right-5 top-24 z-[200] rounded-2xl border border-emerald-200 bg-white px-5 py-4 shadow-[0_20px_50px_rgba(15,23,42,0.18)]">
+          <p className="text-sm font-semibold text-slate-900">Wiadomość wysłana</p>
+          <p className="mt-1 text-sm text-slate-600">Dziękujemy za kontakt.</p>
+        </div>
+      )}
+
+      {formStatus === "error" && (
+        <div className="fixed right-5 top-24 z-[200] rounded-2xl border border-red-200 bg-white px-5 py-4 shadow-[0_20px_50px_rgba(15,23,42,0.18)]">
+          <p className="text-sm font-semibold text-slate-900">Nie udało się wysłać</p>
+          <p className="mt-1 text-sm text-slate-600">Spróbuj ponownie za chwilę.</p>
+        </div>
+      )}
+
       <header className="fixed inset-x-0 top-0 z-[100] border-b border-black/5 bg-[#111315]/95 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <a
-            href="#start"
-            onClick={closeMenu}
-            className="text-base font-semibold tracking-tight text-white sm:text-lg"
-          >
-            Twój przyszły wójt - Robert Rychlicki
-          </a>
+         <a
+  href="#start"
+  onClick={closeMenu}
+  className="text-lg font-semibold tracking-tight text-white sm:text-xl"
+>
+  Robert Rychlicki
+</a>
 
           <nav className="hidden items-center gap-6 md:flex">
             {navItems.map((item) => (
               <a
                 key={item.href}
                 href={item.href}
-                className="text-sm font-medium text-white/75 transition hover:text-white"
+                className="text-sm font-medium text-white/75 transition-all duration-300 hover:text-white hover:tracking-wide"
               >
                 {item.label}
               </a>
@@ -124,7 +151,7 @@ export default function Home() {
           <div className="flex items-center gap-3">
             <a
               href="#kontakt"
-              className="hidden rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 sm:inline-flex"
+              className="hidden rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:bg-slate-100 sm:inline-flex"
             >
               Napisz do mnie
             </a>
@@ -134,7 +161,7 @@ export default function Home() {
               aria-label="Otwórz menu"
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen((prev) => !prev)}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white md:hidden"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition-all duration-300 hover:scale-105 hover:bg-white/20 md:hidden"
             >
               <span className="text-2xl leading-none">{menuOpen ? "×" : "☰"}</span>
             </button>
@@ -152,15 +179,16 @@ export default function Home() {
                 key={item.href}
                 href={item.href}
                 onClick={closeMenu}
-                className="rounded-2xl px-4 py-3 text-sm font-medium text-white/85 transition hover:bg-white/10 hover:text-white"
+                className="rounded-2xl px-4 py-3 text-sm font-medium text-white/85 transition-all duration-300 hover:bg-white/10 hover:text-white"
               >
                 {item.label}
               </a>
             ))}
+
             <a
               href="#kontakt"
               onClick={closeMenu}
-              className="mt-2 inline-flex justify-center rounded-full bg-white px-4 py-3 text-sm font-semibold text-slate-900"
+              className="mt-2 inline-flex justify-center rounded-full bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition-all duration-300 hover:scale-105"
             >
               Napisz do mnie
             </a>
@@ -170,66 +198,58 @@ export default function Home() {
 
       <main className="pt-24 sm:pt-28">
         <section id="start" className="px-4 pb-10 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-6xl overflow-hidden rounded-[2.25rem] bg-[#c8dbe5]">
-            <div className="grid items-stretch gap-0 lg:grid-cols-2">
-              <div className="flex flex-col justify-center px-6 py-10 sm:px-10 sm:py-14 lg:px-14 lg:py-16">
-                <div className="mb-6 inline-flex w-fit rounded-full bg-slate-900 px-4 py-2 text-xs font-medium uppercase tracking-[0.18em] text-white sm:text-[11px]">
-                  Twój przyszły wójt
-                </div>
+          <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[2.5rem] bg-slate-950 shadow-[0_25px_80px_rgba(15,23,42,0.25)]">
+            <img
+              src="/images/panorama_tok.jpg"
+              alt="Panorama Tokarni"
+              className="absolute inset-0 h-full w-full object-cover opacity-100"
+            />
 
-                <h1 className="max-w-lg text-3xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
-                  Tokarnia może więcej.
-                </h1>
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/70 via-slate-950/60 to-slate-950/30" />
+            <div className="absolute inset-0 bg-black/20" />
 
-                <p className="mt-5 max-w-lg text-sm leading-7 text-slate-700 sm:text-base">
+            <div className="relative z-10 flex min-h-[560px] flex-col justify-end px-6 py-10 sm:px-10 lg:px-14 lg:py-14">
+              <div className="mb-6 inline-flex w-fit rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-medium uppercase tracking-[0.18em] text-white backdrop-blur-md">
+                Twój przyszły wójt
+              </div>
+
+              <h1 className="max-w-4xl text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl lg:text-7xl">
+                Tokarnia może więcej.
+              </h1>
+
+              <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px] lg:items-end">
+                <p className="max-w-2xl text-base leading-8 text-white/85 sm:text-lg">
                   Chcę gminy, która działa sprawnie, słucha mieszkańców i inwestuje tam,
                   gdzie naprawdę trzeba. Bez pustych sloganów. Z konkretnym planem,
                   spokojnym stylem działania i realnym kontaktem z ludźmi.
                 </p>
 
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
                   <a
                     href="#program"
-                    className="flex h-12 min-w-[190px] items-center justify-center rounded-full bg-slate-900 px-6 text-sm font-semibold text-white transition hover:bg-slate-800"
+                    className="flex h-12 items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-slate-900 transition-all duration-300 hover:-translate-y-1 hover:scale-105"
                   >
                     Poznaj mój program
                   </a>
 
                   <a
                     href="#o-mnie"
-                    className="flex h-12 min-w-[190px] items-center justify-center rounded-full border border-slate-400 px-6 text-sm font-semibold text-slate-900 transition hover:bg-black/5"
+                    className="flex h-12 items-center justify-center rounded-full border border-white/30 bg-white/10 px-6 text-sm font-semibold text-white backdrop-blur-md transition-all duration-300 hover:bg-white/20"
                   >
                     Dowiedz się więcej
                   </a>
                 </div>
               </div>
-
-<div className="grid lg:grid-cols-[1fr_1.3fr] items-stretch">
-  
-  {/* LEWA STRONA */}
-  <div className="flex flex-col justify-center px-10 py-14">
-    ...
-  </div>
-
-  {/* PRAWA STRONA */}
-  <div className="flex">
-    <img
-      src="/Robcio.JPG"
-      alt="Kandydat na wójta"
-      className="h-full w-full object-cover object-[10%_center]"
-    />
-  </div>
-
-</div>
             </div>
           </div>
         </section>
+
         <section className="px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
           <div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-3">
             {priorities.map((item) => (
               <div
                 key={item.title}
-                className="rounded-[1.75rem] bg-white p-6 shadow-[0_8px_30px_rgba(15,23,42,0.06)]"
+                className="rounded-[1.75rem] bg-white p-6 shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(15,23,42,0.15)]"
               >
                 <h3 className="text-xl font-semibold tracking-tight text-slate-900">
                   {item.title}
@@ -241,8 +261,16 @@ export default function Home() {
         </section>
 
         <section id="o-mnie" className="px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-          <div className="mx-auto max-w-7xl rounded-[2.25rem] bg-white px-6 py-8 shadow-[0_8px_30px_rgba(15,23,42,0.06)] sm:px-8 sm:py-10 lg:px-10 lg:py-12">
-            <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+          <div className="mx-auto max-w-7xl rounded-[2.25rem] bg-white px-6 py-8 shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition-all duration-300 hover:shadow-[0_20px_50px_rgba(15,23,42,0.1)] sm:px-8 sm:py-10 lg:px-10 lg:py-12">
+            <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+              <div className="flex justify-center lg:justify-start">
+                <img
+                  src="/images/Robcio.JPG"
+                  alt="Robert Rychlicki"
+                  className="h-[420px] w-full max-w-[420px] rounded-[2rem] object-cover object-center shadow-[0_20px_50px_rgba(15,23,42,0.18)]"
+                />
+              </div>
+
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
                   O mnie
@@ -259,26 +287,21 @@ export default function Home() {
                   Ta strona ma pokazać prosty styl działania: mniej chaosu, więcej
                   konkretów, większy porządek w inwestycjach i prawdziwy kontakt z ludźmi.
                 </p>
-              </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-[1.5rem] bg-slate-50 p-5">
-                  <p className="text-sm font-medium text-slate-500">Priorytet</p>
-                  <p className="mt-3 text-lg font-semibold text-slate-900">
-                    Mieszkańcy na pierwszym miejscu
-                  </p>
-                </div>
-                <div className="rounded-[1.5rem] bg-slate-50 p-5">
-                  <p className="text-sm font-medium text-slate-500">Styl działania</p>
-                  <p className="mt-3 text-lg font-semibold text-slate-900">
-                    Spokojnie i konkretnie
-                  </p>
-                </div>
-                <div className="rounded-[1.5rem] bg-slate-50 p-5 sm:col-span-2">
-                  <p className="text-sm font-medium text-slate-500">Cel</p>
-                  <p className="mt-3 text-lg font-semibold text-slate-900">
-                    Nowoczesna, uporządkowana i dobrze zarządzana gmina
-                  </p>
+                <div className="mt-8 grid gap-4 sm:grid-cols-3">
+                  {[
+                    ["Priorytet", "Mieszkańcy"],
+                    ["Styl", "Konkretnie"],
+                    ["Cel", "Dobra gmina"],
+                  ].map(([label, text]) => (
+                    <div
+                      key={label}
+                      className="rounded-[1.5rem] bg-slate-50 p-5 transition-all duration-300 hover:-translate-y-1 hover:bg-slate-100"
+                    >
+                      <p className="text-sm font-medium text-slate-500">{label}</p>
+                      <p className="mt-3 text-lg font-semibold text-slate-900">{text}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -303,7 +326,10 @@ export default function Home() {
 
             <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               {programCards.map((card) => (
-                <div key={card.title} className="rounded-[1.75rem] bg-slate-50 p-6">
+                <div
+                  key={card.title}
+                  className="rounded-[1.75rem] bg-slate-50 p-6 transition-all duration-300 hover:-translate-y-2 hover:bg-white hover:shadow-[0_20px_50px_rgba(15,23,42,0.15)]"
+                >
                   <h3 className="text-xl font-semibold text-slate-900">{card.title}</h3>
                   <ul className="mt-5 space-y-3 text-sm leading-7 text-slate-600">
                     {card.bullets.map((bullet) => (
@@ -320,7 +346,7 @@ export default function Home() {
         </section>
 
         <section id="mieszkancy" className="px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-          <div className="mx-auto max-w-7xl rounded-[2.25rem] bg-[#111315] px-6 py-8 text-white shadow-[0_8px_30px_rgba(15,23,42,0.08)] sm:px-8 sm:py-10 lg:px-10 lg:py-12">
+          <div className="mx-auto max-w-7xl rounded-[2.25rem] bg-[#111315] px-6 py-8 text-white shadow-[0_8px_30px_rgba(15,23,42,0.08)] transition-all duration-300 hover:shadow-[0_25px_60px_rgba(15,23,42,0.25)] sm:px-8 sm:py-10 lg:px-10 lg:py-12">
             <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/55">
@@ -336,7 +362,7 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="rounded-[1.75rem] bg-white/5 p-6">
+              <div className="rounded-[1.75rem] bg-white/5 p-6 transition-all duration-300 hover:bg-white/10">
                 <ul className="space-y-4 text-sm leading-7 text-white/85">
                   {residentPoints.map((point) => (
                     <li key={point} className="flex gap-3">
@@ -350,40 +376,11 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="aktualnosci" className="px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-          <div className="mx-auto max-w-7xl rounded-[2.25rem] bg-white px-6 py-8 shadow-[0_8px_30px_rgba(15,23,42,0.06)] sm:px-8 sm:py-10 lg:px-10 lg:py-12">
-            <div className="max-w-3xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
-                Aktualności
-              </p>
-              <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
-                Bądźmy w stałym kontakcie.
-              </h2>
-              <p className="mt-6 text-base leading-8 text-slate-600">
-                Tutaj możesz dodawać relacje ze spotkań, krótkie podsumowania działań
-                i informacje o kolejnych wydarzeniach kampanii.
-              </p>
-            </div>
-
-            <div className="mt-10 grid gap-4 lg:grid-cols-3">
-              {updates.map((item) => (
-                <article
-                  key={item.title}
-                  className="rounded-[1.75rem] bg-slate-50 p-6"
-                >
-                  <p className="text-sm font-semibold text-slate-500">{item.date}</p>
-                  <h3 className="mt-4 text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">
-                    {item.title}
-                  </h3>
-                  <p className="mt-4 text-sm leading-7 text-slate-600">{item.text}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="kontakt" className="px-4 py-8 pb-12 sm:px-6 sm:py-10 sm:pb-14 lg:px-8 lg:pb-16">
-          <div className="mx-auto max-w-7xl rounded-[2.25rem] bg-white px-6 py-8 shadow-[0_8px_30px_rgba(15,23,42,0.06)] sm:px-8 sm:py-10 lg:px-10 lg:py-12">
+        <section
+          id="kontakt"
+          className="px-4 py-8 pb-12 sm:px-6 sm:py-10 sm:pb-14 lg:px-8 lg:pb-16"
+        >
+          <div className="mx-auto max-w-7xl rounded-[2.25rem] bg-white px-6 py-8 shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition-all duration-300 hover:shadow-[0_20px_50px_rgba(15,23,42,0.1)] sm:px-8 sm:py-10 lg:px-10 lg:py-12">
             <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
@@ -397,26 +394,34 @@ export default function Home() {
                 </p>
               </div>
 
-              <form className="rounded-[1.75rem] bg-slate-50 p-6">
+              <form
+                onSubmit={handleSubmit}
+                className="rounded-[1.75rem] bg-slate-50 p-6 transition-all duration-300 hover:shadow-[0_15px_40px_rgba(15,23,42,0.1)]"
+              >
                 <div className="grid gap-6 sm:grid-cols-2">
                   <div>
                     <label className="mb-2 block text-sm font-medium text-slate-700">
                       Imię i nazwisko
                     </label>
                     <input
+                      name="name"
                       type="text"
                       placeholder="Wpisz swoje imię"
-                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-slate-400"
+                      required
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition-all duration-300 focus:border-slate-400 focus:shadow-[0_0_0_4px_rgba(148,163,184,0.2)]"
                     />
                   </div>
+
                   <div>
                     <label className="mb-2 block text-sm font-medium text-slate-700">
                       Adres e-mail
                     </label>
                     <input
+                      name="email"
                       type="email"
                       placeholder="twoj@email.pl"
-                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-slate-400"
+                      required
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition-all duration-300 focus:border-slate-400 focus:shadow-[0_0_0_4px_rgba(148,163,184,0.2)]"
                     />
                   </div>
                 </div>
@@ -426,9 +431,11 @@ export default function Home() {
                     Temat
                   </label>
                   <input
+                    name="subject"
                     type="text"
                     placeholder="O czym chcesz napisać?"
-                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-slate-400"
+                    required
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition-all duration-300 focus:border-slate-400 focus:shadow-[0_0_0_4px_rgba(148,163,184,0.2)]"
                   />
                 </div>
 
@@ -437,15 +444,17 @@ export default function Home() {
                     Wiadomość
                   </label>
                   <textarea
+                    name="message"
                     rows={6}
                     placeholder="Napisz swoją wiadomość..."
-                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-slate-400"
+                    required
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition-all duration-300 focus:border-slate-400 focus:shadow-[0_0_0_4px_rgba(148,163,184,0.2)]"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className="mt-6 inline-flex w-full justify-center rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 sm:w-auto"
+                  className="mt-6 inline-flex w-full justify-center rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:bg-slate-800 hover:shadow-[0_15px_35px_rgba(15,23,42,0.25)] sm:w-auto"
                 >
                   Wyślij wiadomość
                 </button>
@@ -454,6 +463,43 @@ export default function Home() {
           </div>
         </section>
       </main>
+      <footer className="mt-24 border-t border-slate-200 bg-[#111315] text-white">
+  <div className="mx-auto max-w-7xl px-6 py-12">
+    <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
+      
+      <div>
+        <h3 className="text-xl font-semibold">
+          Robert Rychlicki
+        </h3>
+        <p className="mt-2 text-sm text-slate-400">
+          Kandydat na Wójta Gminy Tokarnia
+        </p>
+      </div>
+
+      <div className="flex flex-col items-center gap-2 md:items-end">
+        <a
+          href="https://www.linkedin.com/in/robert-rychlicki-34836013a/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-slate-300 transition hover:text-white"
+        >
+          LinkedIn
+        </a>
+
+        <a
+          href="#kontakt"
+          className="text-slate-300 transition hover:text-white"
+        >
+          Kontakt
+        </a>
+      </div>
+    </div>
+
+    <div className="mt-8 border-t border-slate-800 pt-6 text-center text-sm text-slate-500">
+      © {new Date().getFullYear()} Robert Rychlicki. Wszelkie prawa zastrzeżone.
+    </div>
+  </div>
+</footer>
     </div>
   );
 }
